@@ -39,6 +39,15 @@ def get_wall_upload_server(access_token, group_id, api_version):
     return upload_url
 
 
+def get_photo_params(filename, upload_url):
+    with open(filename, 'rb') as open_file:
+        file = {'file1': open_file}
+        upload_response = requests.post(upload_url, files=file)
+    upload_response.raise_for_status()
+    upload_response = upload_response.json() 
+    return upload_response['photo'], upload_response['server'], upload_response['hash']
+
+
 def save_wall_photo(access_token, group_id, api_version, upload_photo, upload_server, upload_hash):
     save_params = {
         'access_token':access_token,
@@ -83,17 +92,9 @@ def main():
     filename, author_comment = download_random_comic()
     upload_url = get_wall_upload_server(access_token, group_id, api_version)
     try:
-        with open(filename, 'rb') as open_file:
-            file = {'file1': open_file}
-            upload_response = requests.post(upload_url, files=file)
-        upload_response.raise_for_status()
-        upload_response = upload_response.json() 
-        upload_photo = upload_response['photo']
-        upload_server = upload_response['server']
-        upload_hash = upload_response['hash']
+        upload_photo, upload_server, upload_hash = get_photo_params(filename, upload_url)
         attachments = save_wall_photo(access_token, group_id, api_version, upload_photo, upload_server, upload_hash)
         post_wall_photo(access_token, group_id, api_version, attachments, author_comment)
-        open_file.close()
     finally:
         os.remove(filename)
 
