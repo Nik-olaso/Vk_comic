@@ -24,7 +24,7 @@ def download_random_comic():
     return filename, author_comment
 
 
-def get_wall_upload_server(access_token, group_id, api_version):
+def get_wall_upload_url(access_token, group_id, api_version):
     upload_params = {
         'access_token': access_token,
         'group_id': group_id,
@@ -39,15 +39,14 @@ def get_wall_upload_server(access_token, group_id, api_version):
     return upload_url
 
 
-def get_photo_params(filename, upload_url):
+def upload_comic_to_vk_server(filename, upload_url):
     with open(filename, 'rb') as open_file:
         file = {'file1': open_file}
         upload_response = requests.post(upload_url, files=file)
     upload_response.raise_for_status()
     upload_response = upload_response.json() 
     return upload_response['photo'], upload_response['server'], upload_response['hash']
-
-
+    
 def save_wall_photo(access_token, group_id, api_version, upload_photo, upload_server, upload_hash):
     save_params = {
         'access_token':access_token,
@@ -90,9 +89,9 @@ def main():
     access_token = os.environ["VK_ACCESS_TOKEN"]
     api_version = "5.131"
     filename, author_comment = download_random_comic()
-    upload_url = get_wall_upload_server(access_token, group_id, api_version)
+    upload_url = get_wall_upload_url(access_token, group_id, api_version)
     try:
-        upload_photo, upload_server, upload_hash = get_photo_params(filename, upload_url)
+        upload_photo, upload_server, upload_hash = upload_comic_to_vk_server(filename, upload_url)
         attachments = save_wall_photo(access_token, group_id, api_version, upload_photo, upload_server, upload_hash)
         post_wall_photo(access_token, group_id, api_version, attachments, author_comment)
     finally:
